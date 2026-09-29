@@ -1,5 +1,10 @@
 const UPSTREAM = (process.env.UPSTREAM_API_BASE || "https://clonr.co/api").replace(/\/$/, "");
-function json(data, status = 200) { return new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }); }
+const CREDITS = {
+  developer: "https://t.me/thezake",
+  github: "https://github.com/Imkrishana",
+  reference: "https://clonr.co"
+};
+function json(data, status = 200) { return new Response(JSON.stringify({ ...data, credits: CREDITS }), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }); }
 function effectiveState(x) { const total = Number(x?.total_files ?? 0); const completed = Number(x?.completed_files ?? 0); const failed = Number(x?.failed_files ?? 0); if (x?.cache_state === "completed" || (x?.zip_url && total > 0 && completed >= total && failed === 0)) return "completed"; return x?.state || x?.cache_state || "unknown"; }
 function metadata(x, id) { return { job_id: x?.id || id, state: effectiveState(x), name: x?.name || null, total_files: x?.total_files ?? null, total_size: x?.total_size ?? null, completed_files: x?.completed_files ?? null, failed_files: x?.failed_files ?? null, zip_url: x?.zip_url || null, files: (x?.files || []).map(f => ({ name: f.name || null, size: f.size ?? null, state: f.state || null, poster: f.poster || null, download_url: f.url || null, width: f.width ?? null, height: f.height ?? null, duration_s: f.duration_s ?? null })) }; }
 export async function GET(request) {
