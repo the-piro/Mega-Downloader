@@ -1,6 +1,11 @@
 const UPSTREAM = (process.env.UPSTREAM_API_BASE || "https://clonr.co/api").replace(/\/$/, "");
 const TERMINAL = new Set(["completed", "partial", "failed", "expired"]);
 const MAX_WAIT_MS = Math.min(Number(process.env.MAX_WAIT_MS || 20000), 25000);
+const CREDITS = {
+  developer: "https://t.me/thezake",
+  github: "https://github.com/Imkrishana",
+  reference: "https://clonr.co"
+};
 
 function effectiveState(x) {
   const total = Number(x?.total_files ?? 0);
@@ -11,10 +16,15 @@ function effectiveState(x) {
 }
 
 function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
+  return new Response(JSON.stringify({ ...data, credits: CREDITS }), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 }
 function safeUrl(value) {
-  try { const u = new URL(value); return /^https?:$/.test(u.protocol) && /(^|\.)mega\.nz$/i.test(u.hostname) ? u.toString() : null; } catch { return null; }
+  try {
+    const u = new URL(value);
+    if (!/^https?:$/.test(u.protocol) || !/(^|\.)mega\.(nz|io)$/i.test(u.hostname)) return null;
+    u.hostname = "mega.nz";
+    return u.toString();
+  } catch { return null; }
 }
 async function upstream(path, init = {}) {
   const r = await fetch(`${UPSTREAM}${path}`, { ...init, headers: { accept: "application/json", ...(init.headers || {}) } });
